@@ -1,0 +1,90 @@
+trigger: none
+pr: none
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  # --- SQL Server (adjust host:port/database as needed) ---
+  SqlServerHost: 'HOST'
+  SqlDatabase:   'DB'
+  Encrypt:       'True'   # 'True' or 'False'
+  TrustCert:     'True'   # 'True' or 'False'
+
+  # --- Snowflake context ---
+  SfAccount:   'ACCOUNT'
+  SfUser:      'USER'
+  SfRole:      'ROLE'
+  SfWarehouse: 'COMPUTE_WH'
+  SfDatabase:  'DBSF' 
+  SfSchema:    'SCHEMA'
+
+  # Output table (optional override)
+  TargetTable: 'RESTAURANT_API_RESULTS'
+
+# Secrets to define in pipeline/variable group (mark as secret):
+#   SqlUser, SqlPass, SfPassword, GeoApiKey
+
+stages:
+- stage: RunAPIOnly
+  displayName: Run API Enrichment (SQL -> API -> Snowflake)
+  jobs:
+  - job: RunApiJob
+    displayName: Run apiazurepre.py
+    steps:
+
+    # 1) Use Python 3.11
+    - task: UsePythonVersion@0
+      displayName: Use Python 3.11
+      inputs:
+        versionSpec: '3.11'
+
+    # 2) Ensure Microsoft ODBC Driver 18 for SQL Server (required by pyodbc)
+    - powershell: |
+        $ErrorActionPreference = 'Stop'
+        $drv = Get-OdbcDriver | Where-Object { $_.Name -eq 'ODBC Driver 18 for SQL Server' }
+        if (-not $drv) {
+          Write-Host "Installing ODBC Driver 18..."
+          winget source update
+          winget install -e --id Microsoft.msodbcsql.18 --silent --accept-source-agreements --accept-package-agreements
+        } else {
+          Write-Host "ODBC Driver 18 already installed."
+        }
+      displayName: Ensure ODBC Driver 18
+
+    # 3) Install Python dependencies (Windows-safe: use python -m pip)
+    - script: |
+        python -m pip install --upgrade pip
+        python -m pip install pyodbc pandas sqlalchemy snowflake-connector-python[pandas] requests
+      displayName: Install Python dependencies
+
+    # 4) Run ONLY the API enrichment script
+    - script: python scripts/apiazurepre.py
+      displayName: Run apiazurepre.py
+      env:
+        # --- SQL Server (used by script to pull source rows) ---
+        SQL_HOST: $(SqlServerHost)
+        SQL_DB:   $(SqlDatabase)
+        SQL_USER: $(SqlUser)
+        SQL_PASS: $(SqlPass)
+        SQL_ENCRYPT: $(Encrypt)
+        SQL_TRUST: $(TrustCert)
+
+        # Optional source override
+        # SQL_SRC_QUERY: SELECT restaurant_id AS RESTAURANT_ID, latitude AS LATITUDE, longitude AS LONGITUDE FROM restaurant.restaurants
+        # SQL_SRC_TABLE: restaurant.restaurants
+
+        # --- Geoapify API key ---
+        GEO_API_KEY: $(GeoApiKey)
+
+        # --- Snowflake (used by script to push enriched results) ---
+        SF_ACCOUNT:  $(SfAccount)
+        SF_USER:     $(SfUser)
+        SF_PASSWORD: $(SfPassword)
+        SF_ROLE:     $(SfRole)
+        SF_WH:       $(SfWarehouse)
+        SF_DB:       $(SfDatabase)
+        SF_SCHEMA:   $(SfSchema)
+
+        # --- Target table name (optional override) ---
+        TARGET_TABLE: $(TargetTable)

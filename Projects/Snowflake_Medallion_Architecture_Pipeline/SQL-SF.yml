@@ -1,0 +1,141 @@
+# Pipeline: SQL Server -> Snowflake (fast PUT + COPY)
+# Python script lives in: scripts/load_sql_to_snowflake.py
+# Runs with high-throughput multi-threaded loader
+
+trigger: none
+pr: none
+
+#schedules:
+#- cron: "0 * * * *"
+#  displayName: "Run hourly on the hour"
+#  branches:
+#    include:
+#      - main
+#  always: true
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  # SQL Server
+  SqlServerHost: 'Host'
+  SqlDatabase:   'DB'
+  Encrypt:       'True'
+  TrustCert:     'True'
+
+  # Snowflake
+  SfAccount:   'ACCOUNT'
+  SfUser:      'USER'
+  SfRole:      'ROLE'
+  SfWarehouse: 'COMPUTE_WH'
+  SfDatabase:  'DBSF'
+  SfSchema:    'SCHEMA'
+  SfTableKind: 'TRANSIENT'
+
+  StatusFlagsTable: 'STATUS_FLAGS'
+
+  # Source -> Destination Map
+  TablesJson: |
+    [
+      {"src": "Schema.Table", "dst": "BRONZE_RIDER"},
+      {"src": "Schema.Table", "dst": "BRONZE_CUSTOMER"},
+      {"src": "Schema.Table", "dst": "BRONZE_RESTAURANT"}
+    ]
+
+# Secrets defined in pipeline variables:
+# SqlUser, SqlPass, SfPassword
+
+stages:
+- stage: LoadToSnowflake
+  displayName: SQL Server -> Snowflake Loader
+
+  jobs:
+  - job: RunLoader
+    displayName: Run Loader Script
+
+    steps:
+
+    # ----------------------------------------------------------------------
+    # Diagnostics (optional)
+    # ----------------------------------------------------------------------
+    - powershell: |
+        Write-Host "OS:"; Get-CimInstance Win32_OperatingSystem
+        Write-Host "PowerShell:"; $PSVersionTable
+      displayName: Check Environment
+
+    # ----------------------------------------------------------------------
+    # Ensure Microsoft ODBC 18 installed
+    # ----------------------------------------------------------------------
+    - powershell: |
+        $ErrorActionPreference = 'Stop'
+        $drv = Get-OdbcDriver | Where-Object { $_.Name -eq 'ODBC Driver 18 for SQL Server' }
+        if (-not $drv) {
+          Write-Host "Installing ODBC Driver 18..."
+          winget source update
+          winget install -e --id Microsoft.msodbcsql.18 --silent --accept-source-agreements --accept-package-agreements
+        } else {
+          Write-Host "ODBC Driver 18 already installed."
+        }
+      displayName: Ensure ODBC Driver 18
+
+    # ----------------------------------------------------------------------
+    # Use Python 3.11
+    # ----------------------------------------------------------------------
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.11'
+      displayName: Use Python 3.11
+
+    # ----------------------------------------------------------------------
+    # Cache pip packages
+    # ----------------------------------------------------------------------
+    - task: Cache@2
+      inputs:
+        key: 'pip | "$(Agent.OS)" | v1'
+        restoreKeys: 'pip | "$(Agent.OS)"'
+        path: $(Pipeline.Workspace)/.pip
+      displayName: Cache pip packages
+
+    # ----------------------------------------------------------------------
+    # Install deps
+    # ----------------------------------------------------------------------
+    - script: |
+        python -m pip install --upgrade pip
+        pip install --cache-dir "%PIP_CACHE_DIR%" pyodbc pandas sqlalchemy snowflake-connector-python
+      env:
+        PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+      displayName: Install Python dependencies
+
+    # ----------------------------------------------------------------------
+    # Run the loader
+    # ----------------------------------------------------------------------
+    - script: python scripts/load_sql_to_snowflake.py
+      displayName: Run SQL -> Snowflake Loader
+      env:
+        # SQL Server
+        SQL_HOST: $(SqlServerHost)
+        SQL_DB: $(SqlDatabase)
+        SQL_USER: $(SqlUser)
+        SQL_PASS: $(SqlPass)
+        SQL_ENCRYPT: $(Encrypt)
+        SQL_TRUST: $(TrustCert)
+
+        # Snowflake
+        SF_ACCOUNT:  $(SfAccount)
+        SF_USER:     $(SfUser)
+        SF_PASSWORD: $(SfPassword)
+        SF_ROLE:     $(SfRole)
+        SF_WH:       $(SfWarehouse)
+        SF_DB:       $(SfDatabase)
+        SF_SCHEMA:   $(SfSchema)
+        SF_TABLE_KIND: $(SfTableKind)
+
+        # Status table
+        STATUS_FLAGS_TABLE: $(StatusFlagsTable)
+
+        # JSON table map
+        TABLE_MAP: $(TablesJson)
+
+        # Ensure UTF-8 output on Windows runner
+        PYTHONIOENCODING: utf-8
+        PYTHONUTF8: "1"
