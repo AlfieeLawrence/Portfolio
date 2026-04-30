@@ -17,8 +17,9 @@ st.markdown("""
         padding-bottom: 12px;
         margin-bottom: 0;
         margin-top: -8px;
-        background: var(--secondary-background-color);
+        background: var(--background-color);
         border-bottom: 1px solid var(--sidebar-border-color);
+        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
     }
 
     .sticky-header-marker { height: 0px; }
