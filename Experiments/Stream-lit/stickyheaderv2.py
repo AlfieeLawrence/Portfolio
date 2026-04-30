@@ -7,11 +7,11 @@ st.set_page_config(
 )
 
 # ----------------------------------------------------
-# Sticky header styling (Streamlit-theme aware)
+# Sticky header styling (theme-aware, boxed, no bleed)
 # ----------------------------------------------------
 st.markdown("""
 <style>
-    /* Sticky main filter bar */
+    /* Sticky positioning layer */
     div[data-testid="stVerticalBlock"] 
     > div:has(div.sticky-header-marker) {
 
@@ -19,15 +19,20 @@ st.markdown("""
         top: 0;
         z-index: 9999;
 
-        padding-top: 8px;
-        padding-bottom: 12px;
         margin-top: -8px;
         margin-bottom: 0;
+    }
 
-        /* ✨ THIS IS THE KEY LINE ✨ */
+    /* Visible header "box" */
+    div[data-testid="stVerticalBlock"] 
+    > div:has(div.sticky-header-marker)
+    > div {
+
         background-color: var(--background-color);
+        padding: 8px 16px 12px 16px;
 
         border-bottom: 1px solid var(--sidebar-border-color);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
     }
 
     /* Marker element */
