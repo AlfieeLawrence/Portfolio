@@ -3,11 +3,12 @@ import pandas as pd
 
 st.set_page_config(layout="wide")
 
-# -----------------------------------------------------------------------------
-# Sticky banner styles (opaque + theme-aware)
-# -----------------------------------------------------------------------------
 st.markdown("""
 <style>
+
+/* ------------------------------------------------------------------
+   Hard-stop transparency issues in Streamlit
+------------------------------------------------------------------ */
 
 /* Remove Streamlit top padding */
 .block-container {
@@ -17,19 +18,32 @@ st.markdown("""
 /* Sticky banner wrapper */
 div[data-testid="stVerticalBlock"]
 > div:has(div.sticky-banner-marker) {
+
     position: sticky;
     top: 0;
     z-index: 1000;
 
-    /* ✅ OPAQUE + THEME-AWARE */
-    background-color: var(--secondary-background-color);
-    color: var(--text-color);
+    /* ✅ FORCE OPAQUE BACKGROUND */
+    background-color: rgb(255, 255, 255);
+
+    /* ✅ PREVENT LAYER BLEED */
+    opacity: 1;
+    isolation: isolate;
 
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(0,0,0,0.12);
 }
 
-/* Marker element */
+/* Dark theme override */
+@media (prefers-color-scheme: dark) {
+  div[data-testid="stVerticalBlock"]
+  > div:has(div.sticky-banner-marker) {
+      background-color: rgb(0, 0, 0);
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+  }
+}
+
+/* Marker */
 .sticky-banner-marker {
     height: 0;
 }
@@ -37,9 +51,9 @@ div[data-testid="stVerticalBlock"]
 </style>
 """, unsafe_allow_html=True)
 
-# -----------------------------------------------------------------------------
-# Sticky banner contents
-# -----------------------------------------------------------------------------
+# --------------------------------------------------
+# Sticky banner
+# --------------------------------------------------
 banner = st.container()
 banner.markdown("<div class='sticky-banner-marker'></div>", unsafe_allow_html=True)
 
@@ -54,9 +68,9 @@ with col2:
 with col3:
     st.button("Apply")
 
-# -----------------------------------------------------------------------------
-# Scrollable content (test stickiness)
-# -----------------------------------------------------------------------------
+# --------------------------------------------------
+# Scroll content
+# --------------------------------------------------
 df = pd.DataFrame({
     "Item": [f"Item {i}" for i in range(300)],
     "Value": range(300),
