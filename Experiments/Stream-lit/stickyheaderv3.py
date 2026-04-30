@@ -1,11 +1,3 @@
-import streamlit as st
-import pandas as pd
-
-st.set_page_config(layout="wide")
-
-# --------------------------------------------------
-# JS + CSS (theme-aware via DOM, not Python)
-# --------------------------------------------------
 st.markdown("""
 <style>
 :root {
@@ -37,8 +29,16 @@ div[data-testid="stVerticalBlock"]
 </style>
 
 <script>
+function getTheme() {
+    // Streamlit may attach data-theme to BODY or HTML depending on version
+    return (
+        document.body.getAttribute("data-theme") ||
+        document.documentElement.getAttribute("data-theme")
+    );
+}
+
 function applyThemeVars() {
-    const theme = document.documentElement.getAttribute("data-theme");
+    const theme = getTheme();
 
     if (theme === "dark") {
         document.documentElement.style.setProperty("--banner-bg", "#000000");
@@ -55,38 +55,12 @@ function applyThemeVars() {
     }
 }
 
-/* Run once */
-applyThemeVars();
+// Run once after DOM settle
+setTimeout(applyThemeVars, 0);
 
-/* React to Streamlit theme toggle */
-new MutationObserver(applyThemeVars)
-  .observe(document.documentElement, { attributes: true });
+// Watch BOTH html and body — Streamlit mutates either
+const observer = new MutationObserver(applyThemeVars);
+observer.observe(document.documentElement, { attributes: true });
+observer.observe(document.body, { attributes: true });
 </script>
 """, unsafe_allow_html=True)
-
-# --------------------------------------------------
-# Sticky banner content
-# --------------------------------------------------
-banner = st.container()
-banner.markdown("<div class='sticky-banner-marker'></div>", unsafe_allow_html=True)
-
-col1, col2, col3 = banner.columns(3)
-
-with col1:
-    st.selectbox("Category", ["All", "A", "B", "C"])
-
-with col2:
-    st.text_input("Search")
-
-with col3:
-    st.button("Apply")
-
-# --------------------------------------------------
-# Scroll content
-# --------------------------------------------------
-df = pd.DataFrame({
-    "Item": [f"Item {i}" for i in range(300)],
-    "Value": range(300),
-})
-
-st.dataframe(df, height=600)
