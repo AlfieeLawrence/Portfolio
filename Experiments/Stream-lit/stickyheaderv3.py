@@ -4,61 +4,71 @@ import pandas as pd
 st.set_page_config(layout="wide")
 
 # --------------------------------------------------
-# Theme-aware sticky banner CSS (pure CSS)
+# JS + CSS (theme-aware via DOM, not Python)
 # --------------------------------------------------
 st.markdown("""
 <style>
+:root {
+    --banner-bg: #ffffff;
+    --banner-border: rgba(0,0,0,0.1);
+}
 
 /* Remove Streamlit top gap */
 .block-container {
     padding-top: 0rem !important;
 }
 
-/* DEFAULT (fallback) */
+/* Sticky banner */
 div[data-testid="stVerticalBlock"]
 > div:has(div.sticky-banner-marker) {
     position: sticky;
     top: 0;
     z-index: 1000;
 
+    background-color: var(--banner-bg);
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-}
-
-/* LIGHT THEME */
-html[data-theme="light"]
-div[data-testid="stVerticalBlock"]
-> div:has(div.sticky-banner-marker) {
-    background-color: #ffffff;
-    color: #000000;
-}
-
-/* DARK THEME */
-html[data-theme="dark"]
-div[data-testid="stVerticalBlock"]
-> div:has(div.sticky-banner-marker) {
-    background-color: #000000;
-    color: #ffffff;
-    border-bottom: 1px solid rgba(255,255,255,0.15);
+    border-bottom: 1px solid var(--banner-border);
 }
 
 /* Marker */
 .sticky-banner-marker {
     height: 0;
 }
-
 </style>
+
+<script>
+function applyThemeVars() {
+    const theme = document.documentElement.getAttribute("data-theme");
+
+    if (theme === "dark") {
+        document.documentElement.style.setProperty("--banner-bg", "#000000");
+        document.documentElement.style.setProperty(
+            "--banner-border",
+            "rgba(255,255,255,0.15)"
+        );
+    } else {
+        document.documentElement.style.setProperty("--banner-bg", "#ffffff");
+        document.documentElement.style.setProperty(
+            "--banner-border",
+            "rgba(0,0,0,0.1)"
+        );
+    }
+}
+
+/* Run once */
+applyThemeVars();
+
+/* React to Streamlit theme toggle */
+new MutationObserver(applyThemeVars)
+  .observe(document.documentElement, { attributes: true });
+</script>
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# Sticky banner
+# Sticky banner content
 # --------------------------------------------------
 banner = st.container()
-
-banner.markdown(
-    "<div class='sticky-banner-marker'></div>",
-    unsafe_allow_html=True
-)
+banner.markdown("<div class='sticky-banner-marker'></div>", unsafe_allow_html=True)
 
 col1, col2, col3 = banner.columns(3)
 
@@ -72,7 +82,7 @@ with col3:
     st.button("Apply")
 
 # --------------------------------------------------
-# Scroll content (for testing stickiness)
+# Scroll content
 # --------------------------------------------------
 df = pd.DataFrame({
     "Item": [f"Item {i}" for i in range(300)],
