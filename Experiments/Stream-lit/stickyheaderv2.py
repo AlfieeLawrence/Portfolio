@@ -17,9 +17,22 @@ st.markdown("""
         padding-bottom: 12px;
         margin-bottom: 0;
         margin-top: -8px;
-        background: var(--background-color);
+        background: var(--secondary-background-color);
         border-bottom: 1px solid var(--sidebar-border-color);
-        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    /* Light mode */
+    @media (prefers-color-scheme: light) {
+        div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
+            background: white;
+        }
+    }
+    
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+        div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
+            background: #0e1117;
+        }
     }
 
     .sticky-header-marker { height: 0px; }
@@ -86,14 +99,6 @@ if show_raw:
     st.write("### Raw Dataset")
     st.dataframe(data)
     
-    
-st.write("### Filtered Results")
-st.dataframe(filtered)
-
-if show_raw:
-    st.write("### Raw Dataset")
-    st.dataframe(data)
-    
 
 st.write("### Filtered Results")
 st.dataframe(filtered)
@@ -103,6 +108,13 @@ if show_raw:
     st.dataframe(data)
     
 
+st.write("### Filtered Results")
+st.dataframe(filtered)
+
+if show_raw:
+    st.write("### Raw Dataset")
+    st.dataframe(data)
+    
 st.write("### Filtered Results")
 st.dataframe(filtered)
 
