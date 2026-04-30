@@ -21,20 +21,6 @@ st.markdown("""
         border-bottom: 1px solid var(--sidebar-border-color);
     }
 
-    /* Light mode */
-    @media (prefers-color-scheme: light) {
-        div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
-            background: white;
-        }
-    }
-    
-    /* Dark mode */
-    @media (prefers-color-scheme: dark) {
-        div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
-            background: #0e1117;
-        }
-    }
-
     .sticky-header-marker { height: 0px; }
 </style>
 """, unsafe_allow_html=True)
