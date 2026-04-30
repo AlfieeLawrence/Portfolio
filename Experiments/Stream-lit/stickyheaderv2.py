@@ -1,56 +1,52 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Sticky Filters + Sidebar", layout="wide")
+st.set_page_config(
+    page_title="Sticky Filters + Sidebar",
+    layout="wide"
+)
 
 # ----------------------------------------------------
-# Sticky header styling (with light/dark mode support)
+# Sticky header styling (Streamlit-theme aware)
 # ----------------------------------------------------
 st.markdown("""
 <style>
     /* Sticky main filter bar */
-    div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
+    div[data-testid="stVerticalBlock"] 
+    > div:has(div.sticky-header-marker) {
+
         position: sticky;
         top: 0;
         z-index: 9999;
+
         padding-top: 8px;
         padding-bottom: 12px;
-        margin-bottom: 0;
         margin-top: -8px;
-        background: var(--secondary-background-color);
+        margin-bottom: 0;
+
+        /* ✨ THIS IS THE KEY LINE ✨ */
+        background-color: var(--background-color);
+
         border-bottom: 1px solid var(--sidebar-border-color);
     }
 
-    /* Light mode */
-    @media (prefers-color-scheme: light) {
-        div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
-            background: white;
-        }
+    /* Marker element */
+    .sticky-header-marker {
+        height: 0;
     }
-    
-    /* Dark mode */
-    @media (prefers-color-scheme: dark) {
-        div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
-            background: #0e1117;
-        }
-    }
-
-    .sticky-header-marker { height: 0px; }
 </style>
 """, unsafe_allow_html=True)
 
-
 # ----------------------------------------------------
-# SIDEBAR (collapsible)
+# SIDEBAR
 # ----------------------------------------------------
 with st.sidebar:
     st.header("Sidebar Settings")
     st.write("This sidebar can collapse and the sticky header still works.")
     show_raw = st.checkbox("Show raw dataset", False)
 
-
 # ----------------------------------------------------
-# Sample data for filtering
+# Sample data
 # ----------------------------------------------------
 data = pd.DataFrame({
     "Category": ["A", "A", "B", "B", "C", "C"] * 10,
@@ -58,27 +54,35 @@ data = pd.DataFrame({
     "Value": [i * 3 for i in range(60)]
 })
 
-
 # ----------------------------------------------------
 # Sticky header (filters)
 # ----------------------------------------------------
 sticky = st.container()
-sticky.markdown("<div class='sticky-header-marker'></div>", unsafe_allow_html=True)
+sticky.markdown(
+    "<div class='sticky-header-marker'></div>",
+    unsafe_allow_html=True
+)
 
 col1, col2, col3 = sticky.columns([1, 2, 1])
 
 with col1:
-    category_filter = st.selectbox("Category", ["All", "A", "B", "C"], key="cat")
+    category_filter = st.selectbox(
+        "Category",
+        ["All", "A", "B", "C"]
+    )
 
 with col2:
-    search_filter = st.text_input("Search item…", key="search")
+    search_filter = st.text_input(
+        "Search item…"
+    )
 
 with col3:
-    apply = st.button("Apply Filters", key="apply")
-
+    apply = st.button(
+        "Apply Filters"
+    )
 
 # ----------------------------------------------------
-# Apply filtering logic
+# Filter logic
 # ----------------------------------------------------
 filtered = data.copy()
 
@@ -86,8 +90,9 @@ if category_filter != "All":
     filtered = filtered[filtered["Category"] == category_filter]
 
 if search_filter:
-    filtered = filtered[filtered["Item"].str.contains(search_filter, case=False)]
-
+    filtered = filtered[
+        filtered["Item"].str.contains(search_filter, case=False)
+    ]
 
 # ----------------------------------------------------
 # Display results
@@ -98,26 +103,8 @@ st.dataframe(filtered)
 if show_raw:
     st.write("### Raw Dataset")
     st.dataframe(data)
-    
 
-st.write("### Filtered Results")
-st.dataframe(filtered)
-
-if show_raw:
-    st.write("### Raw Dataset")
-    st.dataframe(data)
-    
-
-st.write("### Filtered Results")
-st.dataframe(filtered)
-
-if show_raw:
-    st.write("### Raw Dataset")
-    st.dataframe(data)
-    
-st.write("### Filtered Results")
-st.dataframe(filtered)
-
-if show_raw:
-    st.write("### Raw Dataset")
-    st.dataframe(data)
+# Extra rows to prove stickiness
+for _ in range(3):
+    st.write("### Filtered Results")
+    st.dataframe(filtered)
