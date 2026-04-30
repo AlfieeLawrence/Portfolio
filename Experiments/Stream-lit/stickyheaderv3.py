@@ -4,33 +4,45 @@ import pandas as pd
 st.set_page_config(layout="wide")
 
 # --------------------------------------------------
-# Global CSS
+# Theme-aware colors
 # --------------------------------------------------
-st.markdown("""
+theme_base = st.get_option("theme.base")
+
+if theme_base == "dark":
+    banner_bg = "#000000"
+    border_color = "rgba(255,255,255,0.15)"
+else:
+    banner_bg = "#ffffff"
+    border_color = "rgba(0,0,0,0.1)"
+
+# --------------------------------------------------
+# CSS
+# --------------------------------------------------
+st.markdown(f"""
 <style>
 
-/* REMOVE STREAMLIT TOP GAP */
-.block-container {
+/* Remove Streamlit top gap */
+.block-container {{
     padding-top: 0rem !important;
-}
+}}
 
-/* Sticky banner wrapper */
+/* Sticky banner */
 div[data-testid="stVerticalBlock"]
-> div:has(div.sticky-banner-marker) {
+> div:has(div.sticky-banner-marker) {{
     position: sticky;
     top: 0;
     z-index: 1000;
 
-    background-color: #0b1f3b; /* NAVY */
+    background-color: {banner_bg};
     padding: 1rem 1.25rem;
 
-    border-bottom: 1px solid rgba(255,255,255,0.15);
-}
+    border-bottom: 1px solid {border_color};
+}}
 
-/* Zero-height marker */
-.sticky-banner-marker {
+/* Marker */
+.sticky-banner-marker {{
     height: 0;
-}
+}}
 
 </style>
 """, unsafe_allow_html=True)
@@ -39,10 +51,7 @@ div[data-testid="stVerticalBlock"]
 # Sticky banner content
 # --------------------------------------------------
 banner = st.container()
-banner.markdown(
-    "<div class='sticky-banner-marker'></div>",
-    unsafe_allow_html=True
-)
+banner.markdown("<div class='sticky-banner-marker'></div>", unsafe_allow_html=True)
 
 col1, col2, col3 = banner.columns(3)
 
@@ -56,7 +65,7 @@ with col3:
     st.button("Apply")
 
 # --------------------------------------------------
-# Scrollable content
+# Scroll content
 # --------------------------------------------------
 df = pd.DataFrame({
     "Item": [f"Item {i}" for i in range(300)],
