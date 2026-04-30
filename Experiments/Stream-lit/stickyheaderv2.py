@@ -7,7 +7,7 @@ st.set_page_config(
 )
 
 # ----------------------------------------------------
-# JS: Detect Streamlit theme & expose it as body classes
+# JS: Detect Streamlit theme & expose as body classes
 # ----------------------------------------------------
 st.markdown("""
 <script>
@@ -19,11 +19,9 @@ st.markdown("""
 
     if (!bg) return;
 
-    // Extract RGB values
     const rgb = bg.match(/\\d+/g)?.map(Number);
     if (!rgb || rgb.length < 3) return;
 
-    // Perceived luminance
     const luminance =
       0.2126 * rgb[0] +
       0.7152 * rgb[1] +
@@ -35,10 +33,8 @@ st.markdown("""
     document.body.classList.toggle("st-theme-light", !isDark);
   }
 
-  // Initial run
   detectStreamlitTheme();
 
-  // Re-run whenever Streamlit mutates the DOM (theme toggle)
   const observer = new MutationObserver(detectStreamlitTheme);
   observer.observe(document.body, {
     attributes: true,
@@ -50,36 +46,34 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ----------------------------------------------------
-# CSS: Sticky header (explicit colours, theme-aware)
+# CSS: Sticky header with solid background box
 # ----------------------------------------------------
 st.markdown("""
 <style>
-    /* Sticky main filter bar */
-    div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
+    /* Sticky positioning layer */
+    div[data-testid="stVerticalBlock"]
+    > div:has(div.sticky-header-marker) {
+
         position: sticky;
         top: 0;
         z-index: 9999;
-        padding-top: 8px;
-        padding-bottom: 12px;
-        margin-bottom: 0;
-        margin-top: -8px;
 
-        /* safe fallback */
-        background: var(--secondary-background-color);
+        margin-top: -8px;
+        margin-bottom: 0;
+    }
+
+    /* ✅ Visible box behind widgets */
+    div[data-testid="stVerticalBlock"]
+    > div:has(div.sticky-header-marker)
+    > div {
+
+        background-color: var(--background-color);
+        padding: 8px 16px 12px 16px;
 
         border-bottom: 1px solid var(--sidebar-border-color);
-    }
 
-    /* ✅ Light theme (Streamlit app theme, not OS) */
-    body.st-theme-light
-    div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
-        background: white;
-    }
-
-    /* ✅ Dark theme (Streamlit app theme, not OS) */
-    body.st-theme-dark
-    div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
-        background: #0e1117;
+        /* prevents see‑through during scroll */
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
     }
 
     .sticky-header-marker {
