@@ -7,11 +7,54 @@ st.set_page_config(
 )
 
 # ----------------------------------------------------
-# Sticky header styling (Streamlit-theme aware, explicit colors)
+# JS: Detect Streamlit theme & expose it as body classes
+# ----------------------------------------------------
+st.markdown("""
+<script>
+(function () {
+  function detectStreamlitTheme() {
+    const bg = getComputedStyle(document.body)
+      .getPropertyValue('--background-color')
+      .trim();
+
+    if (!bg) return;
+
+    // Extract RGB values
+    const rgb = bg.match(/\\d+/g)?.map(Number);
+    if (!rgb || rgb.length < 3) return;
+
+    // Perceived luminance
+    const luminance =
+      0.2126 * rgb[0] +
+      0.7152 * rgb[1] +
+      0.0722 * rgb[2];
+
+    const isDark = luminance < 128;
+
+    document.body.classList.toggle("st-theme-dark", isDark);
+    document.body.classList.toggle("st-theme-light", !isDark);
+  }
+
+  // Initial run
+  detectStreamlitTheme();
+
+  // Re-run whenever Streamlit mutates the DOM (theme toggle)
+  const observer = new MutationObserver(detectStreamlitTheme);
+  observer.observe(document.body, {
+    attributes: true,
+    childList: true,
+    subtree: true
+  });
+})();
+</script>
+""", unsafe_allow_html=True)
+
+# ----------------------------------------------------
+# CSS: Sticky header (explicit colours, theme-aware)
 # ----------------------------------------------------
 st.markdown("""
 <style>
-    /* Base sticky header */
+    /* Sticky main filter bar */
     div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
         position: sticky;
         top: 0;
@@ -21,20 +64,20 @@ st.markdown("""
         margin-bottom: 0;
         margin-top: -8px;
 
-        /* fallback */
+        /* safe fallback */
         background: var(--secondary-background-color);
 
         border-bottom: 1px solid var(--sidebar-border-color);
     }
 
-    /* ✅ Streamlit LIGHT theme */
-    [data-theme="light"]
+    /* ✅ Light theme (Streamlit app theme, not OS) */
+    body.st-theme-light
     div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
         background: white;
     }
 
-    /* ✅ Streamlit DARK theme */
-    [data-theme="dark"]
+    /* ✅ Dark theme (Streamlit app theme, not OS) */
+    body.st-theme-dark
     div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
         background: #0e1117;
     }
