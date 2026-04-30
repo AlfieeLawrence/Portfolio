@@ -1,0 +1,9 @@
+[theme]
+# Options: "light", "dark", "auto"
+base = "dark"
+
+# CORE COLOURS (authoritative source)
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#1c1f26"
+textColor = "#fafafa"
+primaryColor = "#3b82f6"
