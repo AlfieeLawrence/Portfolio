@@ -4,52 +4,37 @@ import pandas as pd
 st.set_page_config(layout="wide")
 
 # --------------------------------------------------
-# CSS: Correct solid sticky box
+# Sticky banner CSS (simple + solid)
 # --------------------------------------------------
 st.markdown("""
 <style>
-/* Sticky wrapper */
+/* Sticky banner */
 div[data-testid="stVerticalBlock"]
-> div:has(div.sticky-marker) {
+> div:has(div.sticky-banner-marker) {
     position: sticky;
     top: 0;
     z-index: 1000;
-}
 
-/* Solid background layer (THIS stops bleed-through) */
-div[data-testid="stVerticalBlock"]
-> div:has(div.sticky-marker)
-::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-color: var(--background-color);
-    z-index: -1;
-}
-
-/* Content container */
-div[data-testid="stVerticalBlock"]
-> div:has(div.sticky-marker) {
-    position: sticky;
-    background-color: var(--background-color);
+    background-color: #0b1f3b; /* NAVY */
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--sidebar-border-color);
-}
 
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+            
 /* Marker */
-.sticky-marker {
+.sticky-banner-marker {
     height: 0;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# Sticky box
+# Sticky banner section
 # --------------------------------------------------
-sticky = st.container()
-sticky.markdown("<div class='sticky-marker'></div>", unsafe_allow_html=True)
+banner = st.container()
+banner.markdown("<div class='sticky-banner-marker'></div>", unsafe_allow_html=True)
 
-col1, col2, col3 = sticky.columns(3)
+col1, col2, col3 = banner.columns(3)
 
 with col1:
     st.selectbox("Category", ["All", "A", "B", "C"])
@@ -61,7 +46,7 @@ with col3:
     st.button("Apply")
 
 # --------------------------------------------------
-# Scroll content (to prove solidity)
+# Scroll content (proof)
 # --------------------------------------------------
 df = pd.DataFrame({
     "Item": [f"Item {i}" for i in range(300)],
