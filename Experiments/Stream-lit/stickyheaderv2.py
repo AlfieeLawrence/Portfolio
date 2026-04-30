@@ -84,3 +84,27 @@ st.dataframe(filtered)
 if show_raw:
     st.write("### Raw Dataset")
     st.dataframe(data)
+    
+    
+st.write("### Filtered Results")
+st.dataframe(filtered)
+
+if show_raw:
+    st.write("### Raw Dataset")
+    st.dataframe(data)
+    
+
+st.write("### Filtered Results")
+st.dataframe(filtered)
+
+if show_raw:
+    st.write("### Raw Dataset")
+    st.dataframe(data)
+    
+
+st.write("### Filtered Results")
+st.dataframe(filtered)
+
+if show_raw:
+    st.write("### Raw Dataset")
+    st.dataframe(data)
