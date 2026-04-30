@@ -1,70 +1,71 @@
 import streamlit as st
-import pandas as pd
+import streamlit.components.v1 as components
 
 st.set_page_config(layout="wide")
 
-# -----------------------------------------------------------------------------
-# Sticky banner styles (explicit secondary background, non‑transparent)
-# -----------------------------------------------------------------------------
-st.markdown("""
-<style>
-
-/* Remove Streamlit top padding */
-.block-container {
-    padding-top: 0rem !important;
-}
-
-/* Sticky banner wrapper */
-div[data-testid="stVerticalBlock"]
-> div:has(div.sticky-banner-marker) {
-
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-
-    /* ✅ EXPLICIT SECONDARY BACKGROUND */
-    background-color: var(--secondary-background-color);
-    color: var(--text-color);
-
-    /* ✅ Prevent bleed-through */
-    isolation: isolate;
-    opacity: 1;
-
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid rgba(0,0,0,0.12);
-}
-
-/* Marker */
-.sticky-banner-marker {
-    height: 0;
-}
-
-</style>
-""", unsafe_allow_html=True)
+st.title("Detect App Background Color via JavaScript")
 
 # -----------------------------------------------------------------------------
-# Sticky banner content
+# JavaScript → Streamlit bridge component
 # -----------------------------------------------------------------------------
-banner = st.container()
-banner.markdown("<div class='sticky-banner-marker'></div>", unsafe_allow_html=True)
+color_hex = components.html(
+    """
+    <div id="root"></div>
 
-col1, col2, col3 = banner.columns(3)
+    <script>
+    function rgbToHex(rgb) {
+        const result = rgb.match(/\\d+/g);
+        if (!result) return null;
+        return "#" + result
+            .slice(0, 3)
+            .map(x => parseInt(x).toString(16).padStart(2, "0"))
+            .join("");
+    }
 
-with col1:
-    st.selectbox("Category", ["All", "A", "B", "C"])
+    function getBackgroundHex() {
+        const bg = getComputedStyle(document.body)
+            .getPropertyValue("--background-color") ||
+            getComputedStyle(document.body).backgroundColor;
 
-with col2:
-    st.text_input("Search")
+        const hex = rgbToHex(bg);
 
-with col3:
-    st.button("Apply")
+        if (hex) {
+            window.parent.postMessage(
+                {
+                    isStreamlitMessage: true,
+                    type: "streamlit:setComponentValue",
+                    value: hex
+                },
+                "*"
+            );
+        }
+    }
+
+    // Run once after render
+    setTimeout(getBackgroundHex, 100);
+    </script>
+    """,
+    height=0,
+)
 
 # -----------------------------------------------------------------------------
-# Scrollable content
+# Python receives value from JS
 # -----------------------------------------------------------------------------
-df = pd.DataFrame({
-    "Item": [f"Item {i}" for i in range(300)],
-    "Value": range(300),
-})
+if color_hex:
+    st.write("Detected background colour (hex):")
+    st.code(color_hex)
 
-st.dataframe(df, height=600)
+    st.markdown(
+        f"""
+        <div style="
+            width: 150px;
+            height: 80px;
+            background-color: {color_hex};
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 6px;
+        "></div>
+        """,
+        unsafe_allow_html=True,
+    )
+else:
+    st.info("Waiting for JavaScript to report background colour…")
