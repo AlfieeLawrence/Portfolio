@@ -7,11 +7,11 @@ st.set_page_config(
 )
 
 # ----------------------------------------------------
-# Sticky header styling (theme-aware, boxed, unchanged layout)
+# Sticky header styling (Streamlit-theme aware, explicit colors)
 # ----------------------------------------------------
 st.markdown("""
 <style>
-    /* Sticky main filter bar */
+    /* Base sticky header */
     div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
         position: sticky;
         top: 0;
@@ -21,13 +21,24 @@ st.markdown("""
         margin-bottom: 0;
         margin-top: -8px;
 
-        /* ✅ Tracks Streamlit Light / Dark / System theme */
+        /* fallback */
         background: var(--secondary-background-color);
 
         border-bottom: 1px solid var(--sidebar-border-color);
     }
 
-    /* Marker element */
+    /* ✅ Streamlit LIGHT theme */
+    [data-theme="light"]
+    div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
+        background: white;
+    }
+
+    /* ✅ Streamlit DARK theme */
+    [data-theme="dark"]
+    div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
+        background: #0e1117;
+    }
+
     .sticky-header-marker {
         height: 0px;
     }
