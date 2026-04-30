@@ -1,42 +1,53 @@
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(layout="wide", page_title="Sticky Box Demo")
+st.set_page_config(layout="wide")
 
 # --------------------------------------------------
-# Sticky box CSS (simple + correct)
+# CSS: Correct solid sticky box
 # --------------------------------------------------
 st.markdown("""
 <style>
 /* Sticky wrapper */
 div[data-testid="stVerticalBlock"]
-> div:has(div.sticky-box-marker) {
+> div:has(div.sticky-marker) {
     position: sticky;
     top: 0;
     z-index: 1000;
 }
 
-/* Actual box */
+/* Solid background layer (THIS stops bleed-through) */
 div[data-testid="stVerticalBlock"]
-> div:has(div.sticky-box-marker)
-> div {
+> div:has(div.sticky-marker)
+::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-color: var(--background-color);
+    z-index: -1;
+}
+
+/* Content container */
+div[data-testid="stVerticalBlock"]
+> div:has(div.sticky-marker) {
+    position: sticky;
     background-color: var(--background-color);
     padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--sidebar-border-color);
 }
-            
+
 /* Marker */
-.sticky-box-marker {
+.sticky-marker {
     height: 0;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# Sticky box (you put anything inside this)
+# Sticky box
 # --------------------------------------------------
 sticky = st.container()
-sticky.markdown("<div class='sticky-box-marker'></div>", unsafe_allow_html=True)
+sticky.markdown("<div class='sticky-marker'></div>", unsafe_allow_html=True)
 
 col1, col2, col3 = sticky.columns(3)
 
@@ -50,11 +61,11 @@ with col3:
     st.button("Apply")
 
 # --------------------------------------------------
-# Below is just scroll content to prove behavior
+# Scroll content (to prove solidity)
 # --------------------------------------------------
 df = pd.DataFrame({
-    "Item": [f"Item {i}" for i in range(200)],
-    "Value": range(200),
+    "Item": [f"Item {i}" for i in range(300)],
+    "Value": range(300),
 })
 
 st.dataframe(df, height=600)
