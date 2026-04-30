@@ -4,7 +4,7 @@ import pandas as pd
 st.set_page_config(layout="wide")
 
 # -----------------------------------------------------------------------------
-# Sticky banner styles (theme-aware via Streamlit CSS variables)
+# Sticky banner styles (opaque + theme-aware)
 # -----------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -21,15 +21,15 @@ div[data-testid="stVerticalBlock"]
     top: 0;
     z-index: 1000;
 
-    /* ✅ These automatically update with Streamlit theme */
-    background-color: var(--background-color);
+    /* ✅ OPAQUE + THEME-AWARE */
+    background-color: var(--secondary-background-color);
     color: var(--text-color);
 
     padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--secondary-background-color);
+    border-bottom: 1px solid rgba(0,0,0,0.1);
 }
 
-/* Marker element (zero height) */
+/* Marker element */
 .sticky-banner-marker {
     height: 0;
 }
@@ -41,10 +41,7 @@ div[data-testid="stVerticalBlock"]
 # Sticky banner contents
 # -----------------------------------------------------------------------------
 banner = st.container()
-banner.markdown(
-    "<div class='sticky-banner-marker'></div>",
-    unsafe_allow_html=True
-)
+banner.markdown("<div class='sticky-banner-marker'></div>", unsafe_allow_html=True)
 
 col1, col2, col3 = banner.columns(3)
 
@@ -58,7 +55,7 @@ with col3:
     st.button("Apply")
 
 # -----------------------------------------------------------------------------
-# Scrollable content (to prove stickiness)
+# Scrollable content (test stickiness)
 # -----------------------------------------------------------------------------
 df = pd.DataFrame({
     "Item": [f"Item {i}" for i in range(300)],
