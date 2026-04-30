@@ -4,11 +4,17 @@ import pandas as pd
 st.set_page_config(layout="wide")
 
 # --------------------------------------------------
-# Sticky banner CSS (simple + solid)
+# Global CSS
 # --------------------------------------------------
 st.markdown("""
 <style>
-/* Sticky banner */
+
+/* REMOVE STREAMLIT TOP GAP */
+.block-container {
+    padding-top: 0rem !important;
+}
+
+/* Sticky banner wrapper */
 div[data-testid="stVerticalBlock"]
 > div:has(div.sticky-banner-marker) {
     position: sticky;
@@ -20,19 +26,23 @@ div[data-testid="stVerticalBlock"]
 
     border-bottom: 1px solid rgba(255,255,255,0.15);
 }
-            
-/* Marker */
+
+/* Zero-height marker */
 .sticky-banner-marker {
     height: 0;
 }
+
 </style>
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# Sticky banner section
+# Sticky banner content
 # --------------------------------------------------
 banner = st.container()
-banner.markdown("<div class='sticky-banner-marker'></div>", unsafe_allow_html=True)
+banner.markdown(
+    "<div class='sticky-banner-marker'></div>",
+    unsafe_allow_html=True
+)
 
 col1, col2, col3 = banner.columns(3)
 
@@ -46,7 +56,7 @@ with col3:
     st.button("Apply")
 
 # --------------------------------------------------
-# Scroll content (proof)
+# Scrollable content
 # --------------------------------------------------
 df = pd.DataFrame({
     "Item": [f"Item {i}" for i in range(300)],
