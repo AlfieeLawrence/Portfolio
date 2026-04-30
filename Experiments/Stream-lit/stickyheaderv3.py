@@ -6,23 +6,22 @@ st.set_page_config(layout="wide")
 st.title("Detect App Background Color via JavaScript")
 
 # -----------------------------------------------------------------------------
-# JavaScript → Streamlit bridge component
+# JavaScript → Streamlit component
 # -----------------------------------------------------------------------------
-color_hex = components.html(
+bg_hex = components.html(
     """
-    <div id="root"></div>
-
     <script>
     function rgbToHex(rgb) {
-        const result = rgb.match(/\\d+/g);
-        if (!result) return null;
-        return "#" + result
+        const nums = rgb.match(/\\d+/g);
+        if (!nums) return null;
+        return "#" + nums
             .slice(0, 3)
-            .map(x => parseInt(x).toString(16).padStart(2, "0"))
+            .map(v => parseInt(v).toString(16).padStart(2, "0"))
             .join("");
     }
 
-    function getBackgroundHex() {
+    function reportBackground() {
+        // Streamlit-defined CSS variable
         const bg = getComputedStyle(document.body)
             .getPropertyValue("--background-color") ||
             getComputedStyle(document.body).backgroundColor;
@@ -41,31 +40,30 @@ color_hex = components.html(
         }
     }
 
-    // Run once after render
-    setTimeout(getBackgroundHex, 100);
+    setTimeout(reportBackground, 100);
     </script>
     """,
     height=0,
 )
 
 # -----------------------------------------------------------------------------
-# Python receives value from JS
+# Python receives the JS value here
 # -----------------------------------------------------------------------------
-if color_hex:
-    st.write("Detected background colour (hex):")
-    st.code(color_hex)
+if bg_hex is not None:
+    st.write("Detected background color (hex):")
+    st.code(bg_hex)
 
     st.markdown(
         f"""
         <div style="
-            width: 150px;
+            width: 160px;
             height: 80px;
-            background-color: {color_hex};
-            border: 1px solid rgba(0,0,0,0.2);
+            background-color: {bg_hex};
             border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.25);
         "></div>
         """,
         unsafe_allow_html=True,
     )
 else:
-    st.info("Waiting for JavaScript to report background colour…")
+    st.info("Waiting for browser to report background color…")
