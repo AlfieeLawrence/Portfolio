@@ -7,37 +7,29 @@ st.set_page_config(
 )
 
 # ----------------------------------------------------
-# Sticky header styling (theme-aware, boxed, no bleed)
+# Sticky header styling (theme-aware, boxed, unchanged layout)
 # ----------------------------------------------------
 st.markdown("""
 <style>
-    /* Sticky positioning layer */
-    div[data-testid="stVerticalBlock"] 
-    > div:has(div.sticky-header-marker) {
-
+    /* Sticky main filter bar */
+    div[data-testid="stVerticalBlock"] div:has(div.sticky-header-marker) {
         position: sticky;
         top: 0;
         z-index: 9999;
-
-        margin-top: -8px;
+        padding-top: 8px;
+        padding-bottom: 12px;
         margin-bottom: 0;
-    }
+        margin-top: -8px;
 
-    /* Visible header "box" */
-    div[data-testid="stVerticalBlock"] 
-    > div:has(div.sticky-header-marker)
-    > div {
-
-        background-color: var(--background-color);
-        padding: 8px 16px 12px 16px;
+        /* ✅ Tracks Streamlit Light / Dark / System theme */
+        background: var(--secondary-background-color);
 
         border-bottom: 1px solid var(--sidebar-border-color);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
     }
 
     /* Marker element */
     .sticky-header-marker {
-        height: 0;
+        height: 0px;
     }
 </style>
 """, unsafe_allow_html=True)
