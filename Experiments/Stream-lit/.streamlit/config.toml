@@ -1,6 +1,6 @@
 [theme]
 # Options: "light", "dark", "auto"
-base = "dark"
+base = "auto"
 
 # CORE COLOURS (authoritative source)
 backgroundColor = "#0e1117"
