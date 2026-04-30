@@ -4,54 +4,61 @@ import pandas as pd
 st.set_page_config(layout="wide")
 
 # --------------------------------------------------
-# Theme-aware colors
+# Theme-aware sticky banner CSS (pure CSS)
 # --------------------------------------------------
-theme_base = st.get_option("theme.base")
-
-if theme_base == "dark":
-    banner_bg = "#000000"
-    border_color = "rgba(255,255,255,0.15)"
-else:
-    banner_bg = "#ffffff"
-    border_color = "rgba(0,0,0,0.1)"
-
-# --------------------------------------------------
-# CSS
-# --------------------------------------------------
-st.markdown(f"""
+st.markdown("""
 <style>
 
 /* Remove Streamlit top gap */
-.block-container {{
+.block-container {
     padding-top: 0rem !important;
-}}
+}
 
-/* Sticky banner */
+/* DEFAULT (fallback) */
 div[data-testid="stVerticalBlock"]
-> div:has(div.sticky-banner-marker) {{
+> div:has(div.sticky-banner-marker) {
     position: sticky;
     top: 0;
     z-index: 1000;
 
-    background-color: {banner_bg};
     padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
 
-    border-bottom: 1px solid {border_color};
-}}
+/* LIGHT THEME */
+html[data-theme="light"]
+div[data-testid="stVerticalBlock"]
+> div:has(div.sticky-banner-marker) {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* DARK THEME */
+html[data-theme="dark"]
+div[data-testid="stVerticalBlock"]
+> div:has(div.sticky-banner-marker) {
+    background-color: #000000;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+}
 
 /* Marker */
-.sticky-banner-marker {{
+.sticky-banner-marker {
     height: 0;
-}}
+}
 
 </style>
 """, unsafe_allow_html=True)
 
 # --------------------------------------------------
-# Sticky banner content
+# Sticky banner
 # --------------------------------------------------
 banner = st.container()
-banner.markdown("<div class='sticky-banner-marker'></div>", unsafe_allow_html=True)
+
+banner.markdown(
+    "<div class='sticky-banner-marker'></div>",
+    unsafe_allow_html=True
+)
 
 col1, col2, col3 = banner.columns(3)
 
@@ -65,7 +72,7 @@ with col3:
     st.button("Apply")
 
 # --------------------------------------------------
-# Scroll content
+# Scroll content (for testing stickiness)
 # --------------------------------------------------
 df = pd.DataFrame({
     "Item": [f"Item {i}" for i in range(300)],
