@@ -18,7 +18,7 @@ These are joined to assemble a unified training/inference dataset.
 ---
 ## 3) Processing Steps
 ### 3.1 Session & Context
-- Use active Snowflake / Snowpark session within `database_name.schema_name` schema.
+- Use an active Snowflake / Snowpark session within your target Snowflake schema, for example `<SNOWFLAKE_DATABASE>.<SNOWFLAKE_SCHEMA>`.
 
 ### 3.2 Base Extract
 - Select key columns from each Silver table:
@@ -64,7 +64,8 @@ These are joined to assemble a unified training/inference dataset.
 ## 6) Pseudocode (Snowpark)
 ```python
 # set context
-session.use_schema('database_name.schema_name')
+session.use_database('<SNOWFLAKE_DATABASE>')
+session.use_schema('<SNOWFLAKE_SCHEMA>')
 
 # load
 orders = session.table('SILVER_ORDERS')
