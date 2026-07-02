@@ -1,12 +1,14 @@
 # Assets
 
-This directory is for supporting portfolio media and reusable visuals.
+This directory contains supporting portfolio media, reusable visuals, and architecture diagrams.
 
-## Intended Contents
-- Project screenshots
-- Architecture diagrams
-- Dashboard previews
+## Architecture Diagrams
+
+| File | Description |
+|---|---|
+| [`diagrams/medallion-architecture.md`](diagrams/medallion-architecture.md) | End-to-end Snowflake medallion pipeline: sources → Bronze → Silver → Gold → BI & ML |
+| [`diagrams/migration-llm-pipeline.md`](diagrams/migration-llm-pipeline.md) | AI-powered legacy SQL migration tool: Synapse/SQL Server → LLM conversion → Databricks |
+
+## Planned Additions
+- Project screenshots and dashboard previews
 - Presentation-ready images for README files or case studies
-
-## Current Status
-Add exported visuals here as the project documentation expands, then reference them from the relevant project README or case study.

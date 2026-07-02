@@ -1,15 +1,13 @@
 # Case Studies
 
-This section is reserved for longer-form project write-ups.
+Project write-ups with background, architecture decisions, challenges, and outcomes.
 
-## Planned Content
-- Project background and business context
-- Architecture and delivery decisions
-- Trade-offs, constraints, and lessons learned
-- Before/after impact summaries
+## Published
 
-## Suggested First Case Studies
-- Snowflake Medallion Architecture Pipeline
-- Snowflake Badge 3 Streamlit App
+| File | Description |
+|---|---|
+| [`snowflake-medallion-pipeline.md`](snowflake-medallion-pipeline.md) | End-to-end medallion pipeline on Snowflake — ingestion, orchestration, Silver/Gold layers, BI & ML outputs |
 
-As additional projects mature, each case study can expand on the problem, solution, and measurable outcomes.
+## Planned
+- Databricks migration + LLM conversion tool
+- Snowflake Badge 3 Streamlit app
