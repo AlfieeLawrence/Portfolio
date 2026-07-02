@@ -1,4 +1,4 @@
-# database_name – Data Pipeline Orchestration (Overview)
+# Snowflake Data Pipeline Orchestration (Overview)
 
 ## 1. Purpose of This Document
 This document provides an overview of the **data flow pipeline** connecting Azure DevOps and Snowflake. It explains how the Azure ingestion pipeline triggers Snowflake processing using a simple status flag, a stored procedure, and a scheduled Snowflake Task.
@@ -35,8 +35,8 @@ Flag reset to 0
 The status flag is the hand‑off mechanism between Azure DevOps and Snowflake.
 
 ```sql
-USE DATABASE database_name;
-USE SCHEMA schema_name;
+USE DATABASE <SNOWFLAKE_DATABASE>;
+USE SCHEMA <SNOWFLAKE_SCHEMA>;
 
 CREATE OR REPLACE TABLE status_flags (
     datainflag INTEGER NOT NULL
@@ -59,7 +59,7 @@ Azure DevOps sets the flag to **1** upon successful completion of ingestion.
 This stored procedure conditionally triggers all downstream Snowflake processing depending on the value of the flag.
 
 ```sql
-CREATE OR REPLACE PROCEDURE database_name.schema_name.RUN_IF_FLAGGED()
+CREATE OR REPLACE PROCEDURE <SNOWFLAKE_DATABASE>.<SNOWFLAKE_SCHEMA>.RUN_IF_FLAGGED()
 RETURNS STRING
 LANGUAGE SQL
 AS
@@ -67,24 +67,24 @@ $$
 DECLARE v_flag INTEGER;
 BEGIN
     SELECT datainflag INTO :v_flag
-    FROM database_name.schema_name.STATUS_FLAGS;
+    FROM <SNOWFLAKE_DATABASE>.<SNOWFLAKE_SCHEMA>.STATUS_FLAGS;
 
     IF (v_flag = 1) THEN
 
         -- Run Bronze notebook
-        EXECUTE NOTEBOOK database_name.schema_name.BRONZE_COMPLETE();
+        EXECUTE NOTEBOOK <SNOWFLAKE_DATABASE>.<SNOWFLAKE_SCHEMA>.BRONZE_COMPLETE();
 
         -- Run Silver notebook
-        EXECUTE NOTEBOOK database_name.schema_name.SILVER_COMPLETE();
+        EXECUTE NOTEBOOK <SNOWFLAKE_DATABASE>.<SNOWFLAKE_SCHEMA>.SILVER_COMPLETE();
 
         -- Run Clean & Tidy notebook
-        EXECUTE NOTEBOOK database_name.schema_name.CLEANANDTIDY();
+        EXECUTE NOTEBOOK <SNOWFLAKE_DATABASE>.<SNOWFLAKE_SCHEMA>.CLEANANDTIDY();
 
         -- Run Sales Forecasting notebook
-        EXECUTE NOTEBOOK database_name.schema_name.SALESFORCASTING();
+        EXECUTE NOTEBOOK <SNOWFLAKE_DATABASE>.<SNOWFLAKE_SCHEMA>.SALESFORCASTING();
 
         -- Reset flag
-        UPDATE database_name.schema_name.STATUS_FLAGS
+        UPDATE <SNOWFLAKE_DATABASE>.<SNOWFLAKE_SCHEMA>.STATUS_FLAGS
         SET datainflag = 0;
 
         RETURN 'Flag was 1 → executed notebook sequence + reset to 0';
@@ -108,7 +108,7 @@ The Task continuously checks the flag and triggers the stored procedure.
 ```sql
 CREATE OR REPLACE TASK t_check_flag_every_xm
   WAREHOUSE = COMPUTE_WH
-  SCHEDULE = 'x MINUTE'
+  SCHEDULE = '<INTERVAL_MINUTES> MINUTE'
 AS
   CALL run_if_flagged();
 ```
@@ -138,7 +138,7 @@ This signals Snowflake that new Bronze data is ready, enabling the rest of the p
 ---
 
 ## 7. Links to Processing Stage Documentation
-Once added, these docs will be linked here:
+Use the following project documents for the detailed implementation notes:
 
 ### 🔶 Bronze Layer
 Raw ingestion from SQL Server & Azure Blob.  
@@ -150,7 +150,7 @@ Standardisation, cleansing, conformance.
 
 ### 🧹 Restaurant Data Quality
 Downstream cleanup and structural hygiene.  
-➡ `Restaurant Data Quality Documentation.docx`
+➡ `/pipeline/steps/RESTAURANTDATAQUALITY.ipynb`
 
 ### 📈 Sales Forecasting
 ML-ready processed forecasting data pipeline.  
@@ -169,4 +169,4 @@ The framework provides:
 - Automatic end‑to‑end execution when new Bronze data arrives
 - Modular expansion for future processing stages
 
-This document acts as the entry point for the full database_name data pipeline.
+This document acts as the entry point for the full Snowflake pipeline orchestration flow.

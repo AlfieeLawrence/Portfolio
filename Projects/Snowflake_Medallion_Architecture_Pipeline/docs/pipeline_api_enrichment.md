@@ -1,5 +1,5 @@
 
-# database_name – API Enrichment Pipeline (SQL → API → Snowflake)
+# API Enrichment Pipeline (SQL → API → Snowflake)
 
 ## 1. Purpose of This Document
 This document describes the **API Enrichment Pipeline**, an Azure DevOps–driven process that:
@@ -7,7 +7,7 @@ This document describes the **API Enrichment Pipeline**, an Azure DevOps–drive
 1. Pulls restaurant coordinates from **SQL Server**
 2. Calls **Geoapify** reverse‑geocoding + place‑details APIs
 3. Constructs enriched restaurant metadata
-4. Loads the final dataset into **Snowflake** (default table: `schema_name.RESTAURANT_API_RESULTS`)
+4. Loads the final dataset into **Snowflake** (default table: `<SNOWFLAKE_SCHEMA>.RESTAURANT_API_RESULTS`)
 
 This pipeline runs independently from the Bronze→Silver workflow and **does not use the Snowflake flag mechanism**. It is a standalone enrichment process.
 
@@ -15,7 +15,7 @@ This pipeline runs independently from the Bronze→Silver workflow and **does no
 
 ## 2. High-Level Flow
 ```
-SQL Server (schema_name.restaurants)
+SQL Server (<SQL_SERVER_SCHEMA>.restaurants)
         │
         ▼
 Extract: RESTAURANT_ID, LATITUDE, LONGITUDE
@@ -30,7 +30,7 @@ Enriched Restaurant Metadata
         │
         ▼
 Snowflake Table:
-schema_name.RESTAURANT_API_RESULTS
+<SNOWFLAKE_SCHEMA>.RESTAURANT_API_RESULTS
 ```
 
 ---
@@ -58,18 +58,18 @@ pool:
 
 variables:
   # --- SQL Server ---
-  SqlServerHost: 'Host'
-  SqlDatabase:   'database_name'
+  SqlServerHost: '<SQL_SERVER_HOST>'
+  SqlDatabase:   '<SQL_SERVER_DATABASE>'
   Encrypt:       'True'
   TrustCert:     'True'
 
   # --- Snowflake context ---
-  SfAccount:   'Account_Identifier'
-  SfUser:      'User'
-  SfRole:      'Ingestion_Role'
-  SfWarehouse: 'COMPUTE_Warehouse'
-  SfDatabase:  'database_name'
-  SfSchema:    'schema_name'
+  SfAccount:   '<SNOWFLAKE_ACCOUNT>'
+  SfUser:      '<SNOWFLAKE_USER>'
+  SfRole:      '<SNOWFLAKE_ROLE>'
+  SfWarehouse: '<SNOWFLAKE_WAREHOUSE>'
+  SfDatabase:  '<SNOWFLAKE_DATABASE>'
+  SfSchema:    '<SNOWFLAKE_SCHEMA>'
 
   # Output table (optional override)
   TargetTable: 'RESTAURANT_API_RESULTS'
@@ -148,7 +148,7 @@ stages:
 
 ### Responsibilities
 1. **Load restaurants from SQL Server**
-   - Default source: `schema_name.restaurants` (columns: `restaurant_id`, `latitude`, `longitude`)
+   - Default source: `<SQL_SERVER_SCHEMA>.restaurants` (columns: `restaurant_id`, `latitude`, `longitude`)
    - Custom overrides via `SQL_SRC_QUERY` or `SQL_SRC_TABLE`
    - Uses `sqlalchemy` + ODBC 18
 
@@ -180,7 +180,7 @@ stages:
 ## 6. Snowflake Target Table
 
 ### Default Target
-`schema_name.RESTAURANT_API_RESULTS` (configurable via `TARGET_TABLE`)
+`<SNOWFLAKE_SCHEMA>.RESTAURANT_API_RESULTS` (configurable via `TARGET_TABLE`)
 
 ### Expected Schema (auto‑inferred)
 | Column | Type | Notes |
@@ -241,9 +241,7 @@ stages:
 - **Bronze Layer:** `/docs/bronze.md`
 - **Silver Layer** : `/docs/silver.md`
 - **Gold Layer** : `/docs/Gold`
-- **Sales Forecasting** : `/docs/Forecasting.md`
-- **Restaurant Data Quality** : `/docs/Restaurant Data Quality Documentation.docx`
-
-
+- **Sales Forecasting** : `/docs/forecasting.md`
+- **Restaurant Data Quality** : `/pipeline/steps/RESTAURANTDATAQUALITY.ipynb`
 
 

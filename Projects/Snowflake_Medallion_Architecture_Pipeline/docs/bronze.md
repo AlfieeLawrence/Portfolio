@@ -9,7 +9,7 @@
 **Applies to:**
 - Azure DevOps (`SQL-SF.yml`)
 - Python script (`scripts/load_sql_to_snowflake.py`)
-- Snowflake (database: `database_name`, schema: `schema`)
+- Snowflake (database: `<SNOWFLAKE_DATABASE>`, schema: `<SNOWFLAKE_SCHEMA>`)
 
 ---
 
@@ -23,25 +23,25 @@ The **Bronze layer** captures **raw, unmanipulated and non cleansed** source dat
 
 ### Sources
 - **SQL Server**
-  - Host: `Host`
-  - Database: `database_name`
-  - Tables: `schema.riders`, `schema.customers`, `schema.restaurants`
+  - Host: `<SQL_SERVER_HOST>`
+  - Database: `<SQL_SERVER_DATABASE>`
+  - Tables: `<SQL_SERVER_SCHEMA>.riders`, `<SQL_SERVER_SCHEMA>.customers`, `<SQL_SERVER_SCHEMA>.restaurants`
 
 - **Azure Blob Storage (orders)**
-  - Account/Container Path: `azure://database_name.blob.core.windows.net/exact-folder-path`
+  - Account/Container Path: `azure://<STORAGE_ACCOUNT>.blob.core.windows.net/<CONTAINER_OR_PATH>`
 
 ### Snowflake Targets
-- **Account:** `Account_Identifier`
-- **Role:** `Account_Ingestion_Role` (recommended to replace with least-privilege role for prod)
-- **Warehouse:** `COMPUTE_WAREHOUSE`
-- **Database/Schema:** `database_name.schema_name`
+- **Account:** `<SNOWFLAKE_ACCOUNT>`
+- **Role:** `<SNOWFLAKE_ROLE>` (recommended to replace with least-privilege role for prod)
+- **Warehouse:** `<SNOWFLAKE_WAREHOUSE>`
+- **Database/Schema:** `<SNOWFLAKE_DATABASE>.<SNOWFLAKE_SCHEMA>`
 - **Table Type:** `TRANSIENT` (configurable)
 
 **Bronze tables (auto-created/managed):**
-- `schema_name.BRONZE_RIDER`
-- `schema_name.BRONZE_CUSTOMER`
-- `schema_name.BRONZE_RESTAURANT`
-- `schema_name.BRONZE_ORDERS` (from Azure Blob)
+- `<SNOWFLAKE_SCHEMA>.BRONZE_RIDER`
+- `<SNOWFLAKE_SCHEMA>.BRONZE_CUSTOMER`
+- `<SNOWFLAKE_SCHEMA>.BRONZE_RESTAURANT`
+- `<SNOWFLAKE_SCHEMA>.BRONZE_ORDERS` (from Azure Blob)
 
 ---
 
@@ -49,7 +49,7 @@ The **Bronze layer** captures **raw, unmanipulated and non cleansed** source dat
 
 ```text
 A) SQL Server → Snowflake
-   SQL Server (database_name)
+   SQL Server (<SQL_SERVER_DATABASE>)
      ⭢ Chunked SELECT via SQLAlchemy/pyodbc
      ⭢ CSV files (normalized headers)
      ⭢ Multi-threaded PUT to @~/<dst> (temp_files) to user stage
@@ -58,11 +58,11 @@ A) SQL Server → Snowflake
      ⭢ Update status flag (best-effort)
 
 B) Azure Blob → Snowflake
-   Azure Blob Storage (database_name/exact-folder-path)
+   Azure Blob Storage (<STORAGE_ACCOUNT>/<CONTAINER_OR_PATH>)
      ⭢ Snowflake FILE FORMAT (CSV)
      ⭢ Snowflake EXTERNAL STAGE (SAS creds)
-     ⭢ CREATE OR REPLACE TABLE schema_name.BRONZE_ORDERS (typed columns)
-     ⭢ COPY INTO from @schema_name.ORDERDATA with explicit mapping, file metadata, timestamp
+     ⭢ CREATE OR REPLACE TABLE <SNOWFLAKE_SCHEMA>.BRONZE_ORDERS (typed columns)
+     ⭢ COPY INTO from @<SNOWFLAKE_SCHEMA>.ORDERDATA with explicit mapping, file metadata, timestamp
 ```
 
 ---
@@ -80,9 +80,9 @@ B) Azure Blob → Snowflake
 **Source → Destination Map (example):**
 ```json
 [
-  {"src": "schema_name.riders", "dst": "BRONZE_RIDER"},
-  {"src": "schema_name.customers", "dst": "BRONZE_CUSTOMER"},
-  {"src": "schema_name.restaurants", "dst": "BRONZE_RESTAURANT"}
+  {"src": "<SQL_SERVER_SCHEMA>.riders", "dst": "BRONZE_RIDER"},
+  {"src": "<SQL_SERVER_SCHEMA>.customers", "dst": "BRONZE_CUSTOMER"},
+  {"src": "<SQL_SERVER_SCHEMA>.restaurants", "dst": "BRONZE_RESTAURANT"}
 ]
 ```
 
@@ -100,11 +100,11 @@ B) Azure Blob → Snowflake
 
 ## 5) Azure Blob → Snowflake (Orders)
 
-This path lands orders CSVs from Azure Blob Storage to `schema_name.BRONZE_ORDERS` using a Snowflake **external stage**.
+This path lands orders CSVs from Azure Blob Storage to `<SNOWFLAKE_SCHEMA>.BRONZE_ORDERS` using a Snowflake **external stage**.
 
 ### a) Create/ensure a CSV file format
 ```sql
-CREATE OR REPLACE FILE FORMAT schema_name.CSV_FF
+CREATE OR REPLACE FILE FORMAT <SNOWFLAKE_SCHEMA>.CSV_FF
   TYPE = CSV
   SKIP_HEADER = 1
   FIELD_OPTIONALLY_ENCLOSED_BY = '"'
@@ -113,8 +113,8 @@ CREATE OR REPLACE FILE FORMAT schema_name.CSV_FF
 
 ### b) Create/ensure an external stage (SAS credentials)
 ```sql
-CREATE OR REPLACE STAGE schema_name.ORDERDATA
-  URL = 'azure://database_name.blob.core.windows.net/exact-folder-path'
+CREATE OR REPLACE STAGE <SNOWFLAKE_SCHEMA>.ORDERDATA
+  URL = 'azure://<STORAGE_ACCOUNT>.blob.core.windows.net/<CONTAINER_OR_PATH>'
   CREDENTIALS = (AZURE_SAS_TOKEN = '<SAS_TOKEN>')
   DIRECTORY = (ENABLE = TRUE)
   COMMENT = 'order data MM';
@@ -124,7 +124,7 @@ CREATE OR REPLACE STAGE schema_name.ORDERDATA
 
 ### c) Create/replace the target Bronze table
 ```sql
-CREATE OR REPLACE TRANSIENT TABLE schema_name.BRONZE_ORDERS (
+CREATE OR REPLACE TRANSIENT TABLE <SNOWFLAKE_SCHEMA>.BRONZE_ORDERS (
   IDX                NUMBER,
   ORDER_ID           STRING,
   RESTAURANT_ID      STRING,
@@ -150,7 +150,7 @@ CREATE OR REPLACE TRANSIENT TABLE schema_name.BRONZE_ORDERS (
 
 ### d) Load data with `COPY INTO`
 ```sql
-COPY INTO schema_name.BRONZE_ORDERS (
+COPY INTO <SNOWFLAKE_SCHEMA>.BRONZE_ORDERS (
   IDX,
   ORDER_ID,
   RESTAURANT_ID,
@@ -194,7 +194,7 @@ FROM (
     t.$18::STRING                AS DEVICE_TYPE,
     METADATA$FILENAME            AS FILE_NAME,
     CURRENT_TIMESTAMP()          AS LOAD_TS
-  FROM @schema_name.ORDERDATA (FILE_FORMAT => schema_name.CSV_FF) AS t
+  FROM @<SNOWFLAKE_SCHEMA>.ORDERDATA (FILE_FORMAT => <SNOWFLAKE_SCHEMA>.CSV_FF) AS t
 )
 ON_ERROR = 'CONTINUE';
 ```
@@ -207,7 +207,7 @@ ON_ERROR = 'CONTINUE';
 ### e) Status flag
 In order to not trigger the pipeline when no data and waste compute resurces
 ```sql
-UPDATE schema_name.STATUS_FLAGS SET DATAINFLAG = 0;
+UPDATE <SNOWFLAKE_SCHEMA>.STATUS_FLAGS SET DATAINFLAG = 0;
 ```
 (Reset so that it can be updated back to 1 when new data is avalible and allows for a contious data updating pathway.)
 
@@ -221,9 +221,9 @@ UPDATE schema_name.STATUS_FLAGS SET DATAINFLAG = 0;
 - **Bronze control:** `STATUS_FLAGS_TABLE` (default `STATUS_FLAGS`), `TABLE_MAP` (JSON array)
 
 ### Snowflake objects (Blob path)
-- File format: `schema_name.CSV_FF` (CSV, header skip, optional quotes, null handling)
-- External stage: `schema_name.ORDERDATA` (SAS-based; consider Storage Integration for prod)
-- Target table: `schema_name.BRONZE_ORDERS`
+- File format: `<SNOWFLAKE_SCHEMA>.CSV_FF` (CSV, header skip, optional quotes, null handling)
+- External stage: `<SNOWFLAKE_SCHEMA>.ORDERDATA` (SAS-based; consider Storage Integration for prod)
+- Target table: `<SNOWFLAKE_SCHEMA>.BRONZE_ORDERS`
 
 ---
 
@@ -248,11 +248,11 @@ UPDATE schema_name.STATUS_FLAGS SET DATAINFLAG = 0;
 1. Open Azure DevOps → Pipelines → *SQL Server → Snowflake Loader*.
 2. Set or verify secret variables.
 3. Run and monitor steps.
-4. Validate counts in `schema_name.BRONZE_*` tables.
+4. Validate counts in `<SNOWFLAKE_SCHEMA>.BRONZE_*` tables.
 
 **Run the Blob ingestion (orders)**
-1. In Snowflake, ensure `schema_name.CSV_FF` and `schema_name.ORDERDATA` exist (or create as above).
-2. Create (or replace) `schema_name.BRONZE_ORDERS`.
+1. In Snowflake, ensure `<SNOWFLAKE_SCHEMA>.CSV_FF` and `<SNOWFLAKE_SCHEMA>.ORDERDATA` exist (or create as above).
+2. Create (or replace) `<SNOWFLAKE_SCHEMA>.BRONZE_ORDERS`.
 3. Execute the `COPY INTO` statement.
 4. Optionally update status flags for automation and scheduling.
 
